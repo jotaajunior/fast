@@ -1,5 +1,6 @@
 import { attr, FASTElement, observable } from "@microsoft/fast-element";
 import {
+    Direction,
     keyCodeArrowDown,
     keyCodeArrowLeft,
     keyCodeArrowRight,
@@ -105,6 +106,12 @@ export class Tabs extends FASTElement {
      */
     public activetab: HTMLElement;
 
+    /**
+     * @internal
+     */
+    @observable
+    public direction: Direction = Direction.ltr;
+
     private prevActiveTabIndex: number = 0;
     private activeTabIndex: number = 0;
     private ticking: boolean = false;
@@ -125,6 +132,11 @@ export class Tabs extends FASTElement {
             return 0;
         }
     }
+
+    private getDirection = (): Direction => {
+        const dirNode: HTMLElement | null = this.parentElement!.closest("[dir]");
+        return dirNode !== null && dirNode.dir === "rtl" ? Direction.rtl : Direction.ltr;
+    };
 
     private setTabs = (): void => {
         this.tabIds = this.getTabIds();
@@ -226,11 +238,11 @@ export class Tabs extends FASTElement {
             switch (keyCode) {
                 case keyCodeArrowLeft:
                     event.preventDefault();
-                    this.adjust(-1);
+                    this.adjust(this.direction === Direction.rtl ? 1 : -1);
                     break;
                 case keyCodeArrowRight:
                     event.preventDefault();
-                    this.adjust(1);
+                    this.adjust(this.direction === Direction.rtl ? -1 : 1);
                     break;
             }
         } else {
@@ -327,6 +339,14 @@ export class Tabs extends FASTElement {
             this.tabpanelIds = this.getTabPanelIds();
             this.activeTabIndex = this.getActiveIndex();
         }
+    }
+
+    /**
+     * @internal
+     */
+    public connectedCallback(): void {
+        super.connectedCallback();
+        this.direction = this.getDirection();
     }
 }
 
